@@ -9,15 +9,19 @@ namespace LexA2
 {
     partial class Program
     {
+        static string wordPath = "Words.txt";
         static void Main(string[] args)
         {
 
             while (true)
             {
+                if (args.Length == 1) wordPath = args[0]; //accepts user defined words if specified
+
                 Console.Clear();
-                Console.WriteLine("Try your luck at Hangman!");
+                Console.WriteLine("Try your luck at Hangman! Press the any key to start or ESC to close!");
+                if (Console.ReadKey().Key == ConsoleKey.Escape) return;
                 Game game = new Game();
-                game.HangGame("Words.txt");
+                game.HangGame(wordPath);
             }
         }
     }
@@ -39,11 +43,19 @@ namespace LexA2
             incorrect = new StringBuilder();
             
             string[] HangWords = ReadWords(file);
-            secret = HangWords[GetRandomInt(0, HangWords.Length)].ToLower();
+            if (HangWords.Length==0) //make sure we have something to play with
+            {
+                Console.WriteLine("Couldn't find any csv file with words to load.\n" +
+                    "Put a file name named Words.txt in the program folder, or specify your own with a launch argument.");
+                return;
+            }
+            else
+            {
+                secret = HangWords[GetRandomInt(0, HangWords.Length)].ToLower();
+            }
             string guess;
             while (tries > 0)
-            {
-                
+            {                
                 DrawGallows(tries);    
                 if (correct == secret.Length)
                 {
@@ -56,7 +68,7 @@ namespace LexA2
                 guess = Console.ReadLine().ToLower();
                 if (ValidGuess(guess))
                 {
-                    if (guess.Length == 1)
+                    if (guess.Length == 1) //guessing a single letter
                     {
                         guesses.Append(guess);
                         if (!secret.Contains(guess))
@@ -65,25 +77,25 @@ namespace LexA2
                             incorrect.Append(guess);
                         }
                     }
-                    else if (guess == secret)
+                    else if (guess == secret) //guessing the right word(s)
                     {
                         Console.WriteLine("\nWell done, you guessed it!");
                         Console.ReadLine();
                         return;
                     }
                     else
-                    { //basically incorrect word guesses
+                    { //incorrect word guesses
                         tries--;
                     }
                 }
                 else
-                {
+                { //mostly a catch-all for things not considered
                     Console.WriteLine("That's not a valid guess!");
                 } 
                 
                 
             }
-            DrawGallows(tries);
+            DrawGallows(tries); //for that last, gritty piece of reminder that you skills were insufficient to save that poor ASCII dude
             Console.WriteLine("Sorry! You lose, we were looking for " + secret);
 
             Console.ReadLine();
@@ -92,13 +104,13 @@ namespace LexA2
         /// <summary>
         /// Reads the words to load into the program
         /// </summary>
-        /// <param name="file">path to csv (,) delimited text file</param>
+        /// <param name="file">Path to csv (,) delimited text file</param>
         /// <returns>String array of words read from the specified file</returns>
         public static string[] ReadWords(string file)
         {
             try
             {
-                using TextFieldParser parser = new(file);
+                using TextFieldParser parser = new TextFieldParser(file);
                 parser.Delimiters = new string[] { "," };
                 while (true)
                 {
@@ -108,7 +120,7 @@ namespace LexA2
             }
             catch (Exception)
             {
-                Console.WriteLine("Couldn't find a file to load words from.");
+                Console.WriteLine("Couldn't find a proper csv file to load words from.");
                 throw;
             }
         }
@@ -134,7 +146,7 @@ namespace LexA2
         /// <returns>Randomized int</returns>
         public static int GetRandomInt(int min, int max)
         {
-            Random randNum = new();
+            Random randNum = new Random();
             return randNum.Next(min, max);
         }
 
@@ -170,18 +182,9 @@ namespace LexA2
             Console.WriteLine("Incorrect guesses: " + incorrect.ToString());
         }
 
-        readonly string[] states = { "drop!",
-                                "leg2",
-                                "leg1",
-                                "arm2",
-                                "arm1",
-                                "torso",
-                                "head",
-                                "rope",
-                                "top",
-                                "Pole",
-                                "foundation"};
-
+        /// <summary>
+        /// 2D array of the ASCII depicting a poor, dismembered soul being put back together just to be hanged
+        /// </summary>
         static readonly string[][] HangAscii = new string[][] {
                 new string[]
                 {"  ____________.._______",
@@ -471,7 +474,6 @@ namespace LexA2
                 @" | |                   | |"},
 
             };
-
 
     }
 }
