@@ -28,8 +28,9 @@ namespace LexA2
 
     class Game
     {
-        static StringBuilder guesses,incorrect;
-        static int tries,correct;
+        static StringBuilder incorrect;
+        static char[] guesses;
+        static int tries, correct;
         static string secret;
         /// <summary>
         /// Main game function
@@ -39,11 +40,11 @@ namespace LexA2
         {
             //List<char> guesses = new List<char>();
             tries = 10;
-            guesses = new StringBuilder();
+            guesses = new char[30];
             incorrect = new StringBuilder();
-            
+            AddToArray(' '); //since some places have spaces in their names, and that's not obvious to the player
             string[] HangWords = ReadWords(file);
-            if (HangWords.Length==0) //make sure we have something to play with
+            if (HangWords.Length == 0) //make sure we have something to play with
             {
                 Console.WriteLine("Couldn't find any csv file with words to load.\n" +
                     "Put a file name named Words.txt in the program folder, or specify your own with a launch argument.");
@@ -55,8 +56,8 @@ namespace LexA2
             }
             string guess;
             while (tries > 0)
-            {                
-                DrawGallows(tries);    
+            {
+                DrawGallows(tries);
                 if (correct == secret.Length)
                 {
                     Console.WriteLine("\nCongratulations! You win!");
@@ -70,7 +71,7 @@ namespace LexA2
                 {
                     if (guess.Length == 1) //guessing a single letter
                     {
-                        guesses.Append(guess);
+                        AddToArray(char.Parse(guess));
                         if (!secret.Contains(guess))
                         {
                             tries--;
@@ -91,14 +92,30 @@ namespace LexA2
                 else
                 { //mostly a catch-all for things not considered
                     Console.WriteLine("That's not a valid guess!");
-                } 
-                
-                
+                }
+
+
             }
             DrawGallows(tries); //for that last, gritty piece of reminder that you skills were insufficient to save that poor ASCII dude
             Console.WriteLine("Sorry! You lose, we were looking for " + secret);
 
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Adds a char to the first free slot in the guesses array
+        /// </summary>
+        /// <param name="ch"></param>
+        static void AddToArray(char ch)
+        {
+            for (int i = 0; i < guesses.Length; i++)
+            {
+                if (guesses[i] == '\0')
+                {
+                    guesses[i] = ch;
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -133,9 +150,21 @@ namespace LexA2
         private static bool ValidGuess(string guess)
         {
             // Must be alphabetical, and a single character.
-            return (guess.Length >= 1) 
+            if (guess.Length==1)
+            {
+                return (guess.Length >= 1)
                 && Regex.IsMatch(guess, @"^[a-z,å-ö,A-Z,Å-Ö,' ']+$") //is one or more letter or space
-                && !guesses.ToString().Contains(guess);
+                && !guesses.Contains(char.Parse(guess));
+            }
+            else if (guess.Length >= 1)
+            {
+                return Regex.IsMatch(guess, @"^[a-z,å-ö,A-Z,Å-Ö,' ']+$"); //is one or more letter or space
+            }
+            else
+            {
+                return false;
+            }
+            
         }
 
         /// <summary>
@@ -167,7 +196,7 @@ namespace LexA2
 
             foreach (char item in secret) //check each guess against the secret
             {
-                if (guesses.ToString().Contains(item))
+                if (guesses.Contains(item))
                 {
                     Console.Write(item + " ");
                     correct++;
